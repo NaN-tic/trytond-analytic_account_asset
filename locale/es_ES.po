@@ -1,0 +1,19 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:product.category,analytic_accounts:"
+msgid "Analytic Accounts"
+msgstr "Cuentas analíticas"
+
+msgctxt "field:product.category,analytic_accounts_used:"
+msgid "Analytic Accounts Used"
+msgstr "Cuentas analíticas utilizadas"
+
+msgctxt "field:product.template,analytic_accounts:"
+msgid "Analytic Accounts"
+msgstr "Cuentas analíticas"
+
+msgctxt "field:product.template,analytic_accounts_used:"
+msgid "Analytic Accounts Used"
+msgstr "Cuentas analíticas utilizadas"
