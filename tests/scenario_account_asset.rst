@@ -1,6 +1,6 @@
-=======================
-Analytic Asset Scenario
-=======================
+======================
+Account Asset Scenario
+======================
 
 =============
 General Setup
@@ -119,19 +119,9 @@ Create chart of accounts::
     >>> create_chart.form.account_payable = payable
     >>> create_chart.execute('create_properties')
 
-Create analytic accounts::
-
-    >>> AnalyticAccount = Model.get('analytic_account.account')
-    >>> root = AnalyticAccount(type='root', name='Root')
-    >>> root.save()
-    >>> deprecation_analytic_account = AnalyticAccount(root=root, parent=root,
-    ...     name='Deprecation')
-    >>> deprecation_analytic_account.save()
-
 Create an asset::
 
     >>> ProductUom = Model.get('product.uom')
-    >>> AnalyticSelection = Model.get('analytic_account.account.selection')
     >>> unit, = ProductUom.find([('name', '=', 'Unit')])
     >>> ProductTemplate = Model.get('product.template')
     >>> Product = Model.get('product.product')
@@ -171,7 +161,6 @@ Create payment term::
 
 Buy an asset::
 
-    >>> AnalyticLine = Model.get('analytic_account.line')
     >>> Invoice = Model.get('account.invoice')
     >>> InvoiceLine = Model.get('account.invoice.line')
     >>> supplier_invoice = Invoice(type='in_invoice')
@@ -198,13 +187,37 @@ Depreciate the asset::
     >>> asset = Asset()
     >>> asset.product = asset_product
     >>> asset.supplier_invoice_line = invoice_line
+    >>> asset.value == Decimal('1000')
+    True
+    >>> asset.start_date == supplier_invoice.invoice_date
+    True
+    >>> asset.end_date == (supplier_invoice.invoice_date +
+    ...     relativedelta(years=2, days=-1))
+    True
+    >>> asset.quantity == 1
+    True
+    >>> asset.unit == unit
+    True
     >>> asset.residual_value = Decimal('100')
-    >>> analytic_selection = AnalyticSelection()
-    >>> analytic_selection.accounts.append(deprecation_analytic_account)
-    >>> analytic_selection.save()
-    >>> asset.analytic_accounts = analytic_selection
     >>> asset.save()
     >>> Asset.create_lines([asset.id], config.context)
+    >>> asset.reload()
+    >>> len(asset.lines)
+    24
+    >>> [l.depreciation for l in asset.lines] == [Decimal('37.5')] * 24
+    True
+    >>> asset.lines[0].actual_value == Decimal('962.5')
+    True
+    >>> asset.lines[0].accumulated_depreciation == Decimal('37.5')
+    True
+    >>> asset.lines[11].actual_value == Decimal('550')
+    True
+    >>> asset.lines[11].accumulated_depreciation == Decimal('450')
+    True
+    >>> asset.lines[-1].actual_value == Decimal('100')
+    True
+    >>> asset.lines[-1].accumulated_depreciation == Decimal('900')
+    True
     >>> Asset.run([asset.id], config.context)
     >>> asset.reload()
 
@@ -216,10 +229,6 @@ Create Moves for 3 months::
     >>> create_moves.execute('create_moves')
     >>> (depreciation_account.debit, depreciation_account.credit) == \
     ...     (Decimal('0'), Decimal('112.5'))
-    True
-    >>> deprecation_analytic_account.debit == Decimal('0.0')
-    True
-    >>> deprecation_analytic_account.credit == Decimal('112.5')
     True
     >>> (expense.debit, expense.credit) == \
     ...     (Decimal('112.5'), Decimal('0'))
@@ -246,27 +255,9 @@ Update the asset::
     >>> (depreciation_account.debit, depreciation_account.credit) == \
     ...     (Decimal('100'), Decimal('112.5'))
     True
-    >>> deprecation_analytic_account.reload()
-    >>> deprecation_analytic_account.debit == Decimal('100')
-    True
-    >>> deprecation_analytic_account.credit == Decimal('112.5')
-    True
     >>> expense.reload()
     >>> (expense.debit, expense.credit) == (Decimal('112.5'), Decimal('100'))
     True
-
-Change Analytic account::
-
-
-    >>> new_analytic_account = AnalyticAccount(root=root, parent=root,
-    ...     name='New Deprecation')
-    >>> new_analytic_account.save()
-    >>> analytic_selection = AnalyticSelection()
-    >>> analytic_selection.accounts.append(new_analytic_account)
-    >>> analytic_selection.save()
-    >>> asset.analytic_accounts = analytic_selection
-    >>> asset.save()
-
 
 Create Moves for 3 other months::
 
@@ -281,16 +272,6 @@ Create Moves for 3 other months::
     >>> expense.reload()
     >>> (expense.debit, expense.credit) == \
     ...     (Decimal('239.28'), Decimal('100'))
-    True
-    >>> deprecation_analytic_account.reload()
-    >>> deprecation_analytic_account.debit == Decimal('100')
-    True
-    >>> deprecation_analytic_account.credit == Decimal('112.5')
-    True
-    >>> new_analytic_account.reload()
-    >>> new_analytic_account.debit == Decimal('0.0')
-    True
-    >>> new_analytic_account.credit == Decimal('126.78')
     True
 
 Sale the asset::

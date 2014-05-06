@@ -3,14 +3,12 @@
 
 from trytond.pool import Pool
 from .asset import *
-from .product import *
 
 
 def register():
     Pool.register(
         Asset,
-        Category,
-        Template,
+        Account,
         module='analytic_asset', type_='model')
     Pool.register(
         UpdateAsset,
