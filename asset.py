@@ -41,10 +41,10 @@ class AnalyticMixin:
         return fields
 
     @classmethod
-    def default_get(cls, fields, with_rec_name=True):
+    def default_get(cls, fields, with_rec_name=True, with_on_change=False):
         fields = [x for x in fields if not x.startswith('analytic_account_')]
         return super(AnalyticMixin, cls).default_get(fields,
-            with_rec_name=with_rec_name)
+            with_rec_name=with_rec_name, with_on_change=with_on_change)
 
     @classmethod
     def read(cls, ids, fields_names=None):
@@ -91,6 +91,7 @@ class AnalyticMixin:
     def create(cls, vlist):
         Selection = Pool().get('analytic_account.account.selection')
         vlist = [x.copy() for x in vlist]
+        to_write = []
         for vals in vlist:
             selection_vals = {}
             for field in vals.keys():
@@ -101,50 +102,61 @@ class AnalyticMixin:
                                 [vals[field]]))
                     del vals[field]
             if vals.get('analytic_accounts'):
-                Selection.write([Selection(vals['analytic_accounts'])],
-                    selection_vals)
+                to_write.extend((
+                        [Selection(vals['analytic_accounts'])],
+                        selection_vals
+                        ))
             elif cls.analytic_accounts_available_create(vals):
                 selection, = Selection.create([selection_vals])
                 vals['analytic_accounts'] = selection.id
+        if to_write:
+            Selection.write(*to_write)
         return super(AnalyticMixin, cls).create(vlist)
 
     @classmethod
-    def write(cls, records, vals):
+    def write(cls, *args):
         Selection = Pool().get('analytic_account.account.selection')
-        vals = vals.copy()
-        selection_vals = {}
-        for field in vals.keys():
-            if field.startswith('analytic_account_'):
-                root_id = int(field[len('analytic_account_'):])
-                selection_vals[root_id] = vals[field]
-                del vals[field]
-        if selection_vals:
-            for record in records:
-                if not record.analytic_accounts_available():
-                    continue
-                accounts = []
-                if not record.analytic_accounts:
-                    # Create missing selection
-                    with Transaction().set_user(0):
-                            selection, = Selection.create([{}])
-                    cls.write([record], {
-                            'analytic_accounts': selection.id,
-                            })
-                for account in record.analytic_accounts.accounts:
-                    if account.root.id in selection_vals:
-                        value = selection_vals[account.root.id]
-                        if value:
-                            accounts.append(value)
-                    else:
-                        accounts.append(account.id)
-                for account_id in selection_vals.values():
-                    if account_id \
-                            and account_id not in accounts:
-                        accounts.append(account_id)
-                Selection.write([record.analytic_accounts], {
-                        'accounts': [('set', accounts)],
-                        })
-        super(AnalyticMixin, cls).write(records, vals)
+        actions = iter(args)
+        args = []
+        to_write = []
+        for records, vals in zip(actions, actions):
+            vals = vals.copy()
+            selection_vals = {}
+            for field in vals.keys():
+                if field.startswith('analytic_account_'):
+                    root_id = int(field[len('analytic_account_'):])
+                    selection_vals[root_id] = vals[field]
+                    del vals[field]
+            if selection_vals:
+                for record in records:
+                    if not record.analytic_accounts_available():
+                        continue
+                    accounts = []
+                    if not record.analytic_accounts:
+                        # Create missing selection
+                        with Transaction().set_user(0):
+                                selection, = Selection.create([{}])
+                        cls.write([record], {
+                                'analytic_accounts': selection.id,
+                                })
+                    for account in record.analytic_accounts.accounts:
+                        if account.root.id in selection_vals:
+                            value = selection_vals[account.root.id]
+                            if value:
+                                accounts.append(value)
+                        else:
+                            accounts.append(account.id)
+                    for account_id in selection_vals.values():
+                        if account_id \
+                                and account_id not in accounts:
+                            accounts.append(account_id)
+                    to_write.extend(([record.analytic_accounts], {
+                                'accounts': [('set', accounts)],
+                                }))
+            args.extend((records, vals))
+        if to_write:
+            Selection.write(*to_write)
+        super(AnalyticMixin, cls).write(*args)
 
     @classmethod
     def delete(cls, records):
@@ -164,12 +176,16 @@ class AnalyticMixin:
 
         new_records = super(AnalyticMixin, cls).copy(records, default=default)
 
+        to_write = []
         for record in new_records:
             if record.analytic_accounts:
                 selection, = Selection.copy([record.analytic_accounts])
-                cls.write([record], {
+                to_write.extend([
+                        [record], {
                         'analytic_accounts': selection.id,
-                        })
+                        }])
+        if to_write:
+            cls.write(*to_write)
         return new_records
 
 
@@ -257,9 +273,9 @@ class Account:
         return accounts
 
     @classmethod
-    def write(cls, accounts, vals):
+    def write(cls, *args):
         pool = Pool()
         Asset = pool.get('account.asset')
-        super(Account, cls).write(accounts, vals)
+        super(Account, cls).write(*args)
         # Restart the cache on the fields_view_get method of
         Asset._fields_view_get_cache.clear()
