@@ -150,9 +150,16 @@ class AnalyticMixin:
                         if account_id \
                                 and account_id not in accounts:
                             accounts.append(account_id)
+                    to_remove = list(
+                        set((a.id for a in
+                                record.analytic_accounts.accounts))
+                        - set(accounts))
                     to_write.extend(([record.analytic_accounts], {
-                                'accounts': [('set', accounts)],
-                                }))
+                            'accounts': [
+                                ('remove', to_remove),
+                                ('add', accounts),
+                                ],
+                            }))
             args.extend((records, vals))
         if to_write:
             Selection.write(*to_write)
