@@ -41,7 +41,7 @@ class AnalyticMixin:
         return fields
 
     @classmethod
-    def default_get(cls, fields, with_rec_name=True, with_on_change=False):
+    def default_get(cls, fields, with_rec_name=True, with_on_change=True):
         fields = [x for x in fields if not x.startswith('analytic_account_')]
         return super(AnalyticMixin, cls).default_get(fields,
             with_rec_name=with_rec_name, with_on_change=with_on_change)
