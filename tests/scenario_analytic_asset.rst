@@ -232,6 +232,8 @@ Update the asset::
     >>> update.execute('update_asset')
     >>> update.form.amount == Decimal('100')
     True
+    >>> update.form.date = (supplier_invoice.invoice_date
+    ...     + relativedelta(months=3))
     >>> update.execute('create_move')
     >>> asset.reload()
     >>> asset.value == Decimal('1100')

@@ -5,47 +5,31 @@ import unittest
 import doctest
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import test_view, test_depends
-from trytond.backend.sqlite.database import Database as SQLiteDatabase
+from trytond.tests.test_tryton import doctest_setup, doctest_teardown
 
 
 class TestCase(unittest.TestCase):
-    '''
-    Test module.
-    '''
+    'Test module'
 
     def setUp(self):
         trytond.tests.test_tryton.install_module('analytic_asset')
 
     def test0005views(self):
-        '''
-        Test views.
-        '''
+        'Test views'
         test_view('analytic_asset')
 
     def test0006depends(self):
-        '''
-        Test depends.
-        '''
+        'Test depends'
         test_depends()
-
-
-def doctest_dropdb(test):
-    database = SQLiteDatabase().connect()
-    cursor = database.cursor(autocommit=True)
-    try:
-        database.drop(cursor, ':memory:')
-        cursor.commit()
-    finally:
-        cursor.close()
 
 
 def suite():
     suite = trytond.tests.test_tryton.suite()
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCase))
     suite.addTests(doctest.DocFileSuite('scenario_account_asset.rst',
-            setUp=doctest_dropdb, tearDown=doctest_dropdb, encoding='utf-8',
+            setUp=doctest_setup, tearDown=doctest_teardown, encoding='utf-8',
             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
     suite.addTests(doctest.DocFileSuite('scenario_analytic_asset.rst',
-            setUp=doctest_dropdb, tearDown=doctest_dropdb, encoding='utf-8',
+            setUp=doctest_setup, tearDown=doctest_teardown, encoding='utf-8',
             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
     return suite
