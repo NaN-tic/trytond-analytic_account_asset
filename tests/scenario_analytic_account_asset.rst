@@ -217,10 +217,10 @@ Create Moves for 3 months::
     >>> (depreciation_account.debit, depreciation_account.credit) == \
     ...     (Decimal('0'), Decimal('112.5'))
     True
-    >>> deprecation_analytic_account.debit == Decimal('0.0')
-    True
-    >>> deprecation_analytic_account.credit == Decimal('112.5')
-    True
+    >>> deprecation_analytic_account.debit
+    Decimal('112.50')
+    >>> deprecation_analytic_account.credit
+    Decimal('0.00')
     >>> (expense.debit, expense.credit) == \
     ...     (Decimal('112.5'), Decimal('0'))
     True
@@ -249,10 +249,10 @@ Update the asset::
     ...     (Decimal('100'), Decimal('112.5'))
     True
     >>> deprecation_analytic_account.reload()
-    >>> deprecation_analytic_account.debit == Decimal('100')
-    True
-    >>> deprecation_analytic_account.credit == Decimal('112.5')
-    True
+    >>> deprecation_analytic_account.debit
+    Decimal('112.50')
+    >>> deprecation_analytic_account.credit
+    Decimal('100.00')
     >>> expense.reload()
     >>> (expense.debit, expense.credit) == (Decimal('112.5'), Decimal('100'))
     True
@@ -285,15 +285,15 @@ Create Moves for 3 other months::
     ...     (Decimal('239.28'), Decimal('100'))
     True
     >>> deprecation_analytic_account.reload()
-    >>> deprecation_analytic_account.debit == Decimal('100')
-    True
-    >>> deprecation_analytic_account.credit == Decimal('112.5')
-    True
+    >>> deprecation_analytic_account.debit
+    Decimal('112.50')
+    >>> deprecation_analytic_account.credit
+    Decimal('100.00')
     >>> new_analytic_account.reload()
-    >>> new_analytic_account.debit == Decimal('0.0')
-    True
-    >>> new_analytic_account.credit == Decimal('126.78')
-    True
+    >>> new_analytic_account.debit
+    Decimal('126.78')
+    >>> new_analytic_account.credit
+    Decimal('0.00')
 
 Sale the asset::
 
