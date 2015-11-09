@@ -6,7 +6,7 @@ import re
 import os
 import ConfigParser
 
-MODULE = 'analytic_asset'
+MODULE = 'analytic_account_asset'
 PREFIX = 'nantic'
 MODULE2PREFIX = {}
 

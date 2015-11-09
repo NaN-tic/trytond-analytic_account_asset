@@ -23,7 +23,7 @@ Install account_asset::
 
     >>> Module = Model.get('ir.module.module')
     >>> modules = Module.find([
-    ...     ('name', '=', 'analytic_asset'),
+    ...     ('name', '=', 'analytic_account_asset'),
     ... ])
     >>> Module.install([x.id for x in modules], config.context)
     >>> Wizard('ir.module.module.install_upgrade').execute('upgrade')

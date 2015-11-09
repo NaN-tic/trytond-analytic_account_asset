@@ -12,11 +12,11 @@ class TestCase(unittest.TestCase):
     'Test module'
 
     def setUp(self):
-        trytond.tests.test_tryton.install_module('analytic_asset')
+        trytond.tests.test_tryton.install_module('analytic_account_asset')
 
     def test0005views(self):
         'Test views'
-        test_view('analytic_asset')
+        test_view('analytic_account_asset')
 
     def test0006depends(self):
         'Test depends'
@@ -29,7 +29,7 @@ def suite():
     suite.addTests(doctest.DocFileSuite('scenario_account_asset.rst',
             setUp=doctest_setup, tearDown=doctest_teardown, encoding='utf-8',
             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
-    suite.addTests(doctest.DocFileSuite('scenario_analytic_asset.rst',
+    suite.addTests(doctest.DocFileSuite('scenario_analytic_account_asset.rst',
             setUp=doctest_setup, tearDown=doctest_teardown, encoding='utf-8',
             optionflags=doctest.REPORT_ONLY_FIRST_FAILURE))
     return suite
