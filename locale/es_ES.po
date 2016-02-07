@@ -1,19 +1,15 @@
-# 
+#
 msgid ""
 msgstr "Content-Type: text/plain; charset=utf-8\n"
 
-msgctxt "field:product.category,analytic_accounts:"
+msgctxt "error:account.asset:"
+msgid "Some mandatory root account are missing on \"%(name)s\""
+msgstr "Faltan algunas cuentas analíticas obligatorias en \"%(name)s\"."
+
+msgctxt "field:account.asset,analytic_accounts:"
 msgid "Analytic Accounts"
 msgstr "Cuentas analíticas"
 
-msgctxt "field:product.category,analytic_accounts_used:"
-msgid "Analytic Accounts Used"
-msgstr "Cuentas analíticas utilizadas"
-
-msgctxt "field:product.template,analytic_accounts:"
-msgid "Analytic Accounts"
-msgstr "Cuentas analíticas"
-
-msgctxt "field:product.template,analytic_accounts_used:"
-msgid "Analytic Accounts Used"
-msgstr "Cuentas analíticas utilizadas"
+msgctxt "field:account.asset,analytic_accounts_size:"
+msgid "Analytic Accounts Size"
+msgstr "Tamaño de cuentas analíticas"
