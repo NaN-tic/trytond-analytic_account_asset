@@ -12,6 +12,14 @@ Imports::
     >>> from dateutil.relativedelta import relativedelta
     >>> from decimal import Decimal
     >>> from proteus import config, Model, Wizard
+    >>> from trytond.modules.company.tests.tools import create_company, \
+    ...     get_company
+    >>> from trytond.modules.account.tests.tools import create_fiscalyear, \
+    ...     create_chart, get_accounts
+    >>> from.trytond.modules.account_invoice.tests.tools import \
+    ...     set_fiscalyear_invoice_sequences, create_payment_term
+    >>> from trytond.modules.account_asset.tests.tools \
+    ...     import add_asset_accounts
     >>> today = datetime.date.today()
 
 Create database::
@@ -21,38 +29,17 @@ Create database::
 
 Install account_asset::
 
-    >>> Module = Model.get('ir.module.module')
-    >>> modules = Module.find([
+    >>> Module = Model.get('ir.module')
+    >>> module, = Module.find([
     ...     ('name', '=', 'analytic_account_asset'),
     ... ])
-    >>> Module.install([x.id for x in modules], config.context)
-    >>> Wizard('ir.module.module.install_upgrade').execute('upgrade')
+    >>> module.click('install')
+    >>> Wizard('ir.module.install_upgrade').execute('upgrade')
 
 Create company::
 
-    >>> Currency = Model.get('currency.currency')
-    >>> CurrencyRate = Model.get('currency.currency.rate')
-    >>> Company = Model.get('company.company')
-    >>> Party = Model.get('party.party')
-    >>> company_config = Wizard('company.company.config')
-    >>> company_config.execute('company')
-    >>> company = company_config.form
-    >>> party = Party(name='Dunder Mifflin')
-    >>> party.save()
-    >>> company.party = party
-    >>> currencies = Currency.find([('code', '=', 'USD')])
-    >>> if not currencies:
-    ...     currency = Currency(name='US Dollar', symbol=u'$', code='USD',
-    ...         rounding=Decimal('0.01'), mon_grouping='[]',
-    ...         mon_decimal_point='.', mon_thousands_sep=',')
-    ...     currency.save()
-    ...     CurrencyRate(date=today + relativedelta(month=1, day=1),
-    ...         rate=Decimal('1.0'), currency=currency).save()
-    ... else:
-    ...     currency, = currencies
-    >>> company.currency = currency
-    >>> company_config.execute('add')
-    >>> company, = Company.find()
+    >>> _ = create_company()
+    >>> company = get_company()
 
 Reload the context::
 
@@ -61,63 +48,18 @@ Reload the context::
 
 Create fiscal year::
 
-    >>> FiscalYear = Model.get('account.fiscalyear')
-    >>> Sequence = Model.get('ir.sequence')
-    >>> SequenceStrict = Model.get('ir.sequence.strict')
-    >>> fiscalyear = FiscalYear(name='%s' % today.year)
-    >>> fiscalyear.start_date = today + relativedelta(month=1, day=1)
-    >>> fiscalyear.end_date = today + relativedelta(month=12, day=31)
-    >>> fiscalyear.company = company
-    >>> post_move_sequence = Sequence(name='%s' % today.year,
-    ...     code='account.move',
-    ...     company=company)
-    >>> post_move_sequence.save()
-    >>> fiscalyear.post_move_sequence = post_move_sequence
-    >>> invoice_sequence = SequenceStrict(name='%s' % today.year,
-    ...     code='account.invoice',
-    ...     company=company)
-    >>> invoice_sequence.save()
-    >>> fiscalyear.out_invoice_sequence = invoice_sequence
-    >>> fiscalyear.in_invoice_sequence = invoice_sequence
-    >>> fiscalyear.out_credit_note_sequence = invoice_sequence
-    >>> fiscalyear.in_credit_note_sequence = invoice_sequence
-    >>> fiscalyear.save()
-    >>> FiscalYear.create_period([fiscalyear.id], config.context)
+    >>> fiscalyear = set_fiscalyear_invoice_sequences(
+    ...     create_fiscalyear(company))
+    >>> fiscalyear.click('create_period')
 
 Create chart of accounts::
 
-    >>> AccountTemplate = Model.get('account.account.template')
-    >>> Account = Model.get('account.account')
-    >>> AccountJournal = Model.get('account.journal')
-    >>> account_template, = AccountTemplate.find([('parent', '=', None)])
-    >>> create_chart = Wizard('account.create_chart')
-    >>> create_chart.execute('account')
-    >>> create_chart.form.account_template = account_template
-    >>> create_chart.form.company = company
-    >>> create_chart.execute('create_account')
-    >>> receivable, = Account.find([
-    ...     ('kind', '=', 'receivable'),
-    ...     ('company', '=', company.id),
-    ... ])
-    >>> payable, = Account.find([
-    ...     ('kind', '=', 'payable'),
-    ...     ('company', '=', company.id),
-    ... ])
-    >>> revenue, = Account.find([
-    ...     ('kind', '=', 'revenue'),
-    ...     ('company', '=', company.id),
-    ... ])
-    >>> asset_account, expense = Account.find([
-    ...     ('kind', '=', 'expense'),
-    ...     ('company', '=', company.id),
-    ... ], order=[('name', 'DESC')])
-    >>> depreciation_account, = Account.find([
-    ...     ('kind', '=', 'other'),
-    ...     ('name', '=', 'Depreciation'),
-    ... ])
-    >>> create_chart.form.account_receivable = receivable
-    >>> create_chart.form.account_payable = payable
-    >>> create_chart.execute('create_properties')
+    >>> _ = create_chart(company)
+    >>> accounts = add_asset_accounts(get_accounts(company), company)
+    >>> revenue = accounts['revenue']
+    >>> asset_account = accounts['asset']
+    >>> expense = accounts['expense']
+    >>> depreciation_account = accounts['depreciation']
 
 Create analytic accounts::
 
@@ -131,7 +73,6 @@ Create analytic accounts::
 Create an asset::
 
     >>> ProductUom = Model.get('product.uom')
-    >>> AnalyticSelection = Model.get('analytic_account.account.selection')
     >>> unit, = ProductUom.find([('name', '=', 'Unit')])
     >>> ProductTemplate = Model.get('product.template')
     >>> Product = Model.get('product.product')
@@ -162,11 +103,7 @@ Create supplier::
 
 Create payment term::
 
-    >>> PaymentTerm = Model.get('account.invoice.payment_term')
-    >>> PaymentTermLine = Model.get('account.invoice.payment_term.line')
-    >>> payment_term = PaymentTerm(name='Direct')
-    >>> payment_term_line = PaymentTermLine(type='remainder', days=0)
-    >>> payment_term.lines.append(payment_term_line)
+    >>> payment_term = create_payment_term()
     >>> payment_term.save()
 
 Buy an asset::
@@ -176,15 +113,14 @@ Buy an asset::
     >>> InvoiceLine = Model.get('account.invoice.line')
     >>> supplier_invoice = Invoice(type='in_invoice')
     >>> supplier_invoice.party = supplier
-    >>> invoice_line = InvoiceLine()
-    >>> supplier_invoice.lines.append(invoice_line)
+    >>> invoice_line = supplier_invoice.lines.new()
     >>> invoice_line.product = asset_product
     >>> invoice_line.quantity = 1
     >>> invoice_line.account == asset_account
     True
+    >>> invoice_line.unit_price = Decimal('1000')
     >>> supplier_invoice.invoice_date = today + relativedelta(day=1, month=1)
-    >>> supplier_invoice.save()
-    >>> Invoice.post([supplier_invoice.id], config.context)
+    >>> supplier_invoice.click('post')
     >>> supplier_invoice.state
     u'posted'
     >>> invoice_line, = supplier_invoice.lines
@@ -199,14 +135,10 @@ Depreciate the asset::
     >>> asset.product = asset_product
     >>> asset.supplier_invoice_line = invoice_line
     >>> asset.residual_value = Decimal('100')
-    >>> analytic_selection = AnalyticSelection()
-    >>> analytic_selection.accounts.append(deprecation_analytic_account)
-    >>> analytic_selection.save()
-    >>> asset.analytic_accounts = analytic_selection
-    >>> asset.save()
-    >>> Asset.create_lines([asset.id], config.context)
-    >>> Asset.run([asset.id], config.context)
-    >>> asset.reload()
+    >>> entry, = asset.analytic_accounts
+    >>> entry.account = deprecation_analytic_account
+    >>> asset.click('create_lines')
+    >>> asset.click('run')
 
 Create Moves for 3 months::
 
@@ -214,16 +146,19 @@ Create Moves for 3 months::
     >>> create_moves.form.date = (supplier_invoice.invoice_date
     ...     + relativedelta(months=3))
     >>> create_moves.execute('create_moves')
-    >>> (depreciation_account.debit, depreciation_account.credit) == \
-    ...     (Decimal('0'), Decimal('112.5'))
-    True
+    >>> depreciation_account.debit
+    Decimal('0.00')
+    >>> depreciation_account.credit
+    Decimal('112.50')
+    >>> deprecation_analytic_account.reload()
     >>> deprecation_analytic_account.debit
     Decimal('112.50')
     >>> deprecation_analytic_account.credit
     Decimal('0.00')
-    >>> (expense.debit, expense.credit) == \
-    ...     (Decimal('112.5'), Decimal('0'))
-    True
+    >>> expense.debit
+    Decimal('112.50')
+    >>> expense.credit
+    Decimal('0.00')
 
 Update the asset::
 
@@ -236,26 +171,29 @@ Update the asset::
     ...     + relativedelta(months=3))
     >>> update.execute('create_move')
     >>> asset.reload()
-    >>> asset.value == Decimal('1100')
-    True
-    >>> [l.depreciation for l in asset.lines[:3]] == [Decimal('37.5')] * 3
-    True
+    >>> asset.value
+    Decimal('1100')
+    >>> [l.depreciation for l in asset.lines[:3]]
+    [Decimal('37.50'), Decimal('37.50'), Decimal('37.50')]
     >>> [l.depreciation for l in asset.lines[3:-1]] == [Decimal('42.26')] * 20
     True
-    >>> asset.lines[-1].depreciation == Decimal('42.3')
-    True
+    >>> asset.lines[-1].depreciation
+    Decimal('42.30')
     >>> depreciation_account.reload()
-    >>> (depreciation_account.debit, depreciation_account.credit) == \
-    ...     (Decimal('100'), Decimal('112.5'))
-    True
+    >>> depreciation_account.debit
+    Decimal('100.00')
+    >>> depreciation_account.credit
+    Decimal('112.50')
     >>> deprecation_analytic_account.reload()
     >>> deprecation_analytic_account.debit
     Decimal('112.50')
     >>> deprecation_analytic_account.credit
     Decimal('100.00')
     >>> expense.reload()
-    >>> (expense.debit, expense.credit) == (Decimal('112.5'), Decimal('100'))
-    True
+    >>> expense.debit
+    Decimal('112.50')
+    >>> expense.credit
+    Decimal('100.00')
 
 Change Analytic account::
 
@@ -263,10 +201,9 @@ Change Analytic account::
     >>> new_analytic_account = AnalyticAccount(root=root, parent=root,
     ...     name='New Deprecation')
     >>> new_analytic_account.save()
-    >>> analytic_selection = AnalyticSelection()
-    >>> analytic_selection.accounts.append(new_analytic_account)
-    >>> analytic_selection.save()
-    >>> asset.analytic_accounts = analytic_selection
+    >>> asset.reload()
+    >>> entry, = asset.analytic_accounts
+    >>> entry.account = new_analytic_account
     >>> asset.save()
 
 
@@ -277,13 +214,15 @@ Create Moves for 3 other months::
     ...     + relativedelta(months=6))
     >>> create_moves.execute('create_moves')
     >>> depreciation_account.reload()
-    >>> (depreciation_account.debit, depreciation_account.credit) == \
-    ...     (Decimal('100'), Decimal('239.28'))
-    True
+    >>> depreciation_account.debit
+    Decimal('100.00')
+    >>> depreciation_account.credit
+    Decimal('239.28')
     >>> expense.reload()
-    >>> (expense.debit, expense.credit) == \
-    ...     (Decimal('239.28'), Decimal('100'))
-    True
+    >>> expense.debit
+    Decimal('239.28')
+    >>> expense.credit
+    Decimal('100.00')
     >>> deprecation_analytic_account.reload()
     >>> deprecation_analytic_account.debit
     Decimal('112.50')
@@ -299,28 +238,28 @@ Sale the asset::
 
     >>> customer_invoice = Invoice(type='out_invoice')
     >>> customer_invoice.party = customer
-    >>> invoice_line = InvoiceLine()
-    >>> customer_invoice.lines.append(invoice_line)
+    >>> invoice_line = customer_invoice.lines.new()
     >>> invoice_line.product = asset_product
     >>> invoice_line.asset = asset
     >>> invoice_line.quantity = 1
     >>> invoice_line.unit_price = Decimal('600')
     >>> invoice_line.account == revenue
     True
-    >>> customer_invoice.save()
-    >>> Invoice.post([customer_invoice.id], config.context)
+    >>> customer_invoice.click('post')
     >>> customer_invoice.state
     u'posted'
     >>> asset.reload()
-    >>> asset.customer_invoice_line == customer_invoice.lines[0]
-    True
-    >>> (revenue.debit, revenue.credit) == (Decimal('860.72'), Decimal('600'))
-    True
+    >>> revenue.debit
+    Decimal('860.72')
+    >>> revenue.credit
+    Decimal('600.00')
     >>> asset_account.reload()
-    >>> (asset_account.debit, asset_account.credit) == \
-    ...     (Decimal('1000'), Decimal('1100'))
-    True
+    >>> asset_account.debit
+    Decimal('1000.00')
+    >>> asset_account.credit
+    Decimal('1100.00')
     >>> depreciation_account.reload()
-    >>> (depreciation_account.debit, depreciation_account.credit) == \
-    ...     (Decimal('339.28'), Decimal('239.28'))
-    True
+    >>> depreciation_account.debit
+    Decimal('339.28')
+    >>> depreciation_account.credit
+    Decimal('239.28')
