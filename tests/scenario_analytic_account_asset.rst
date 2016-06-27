@@ -16,7 +16,7 @@ Imports::
     ...     get_company
     >>> from trytond.modules.account.tests.tools import create_fiscalyear, \
     ...     create_chart, get_accounts
-    >>> from.trytond.modules.account_invoice.tests.tools import \
+    >>> from trytond.modules.account_invoice.tests.tools import \
     ...     set_fiscalyear_invoice_sequences, create_payment_term
     >>> from trytond.modules.account_asset.tests.tools \
     ...     import add_asset_accounts
@@ -111,7 +111,7 @@ Buy an asset::
     >>> AnalyticLine = Model.get('analytic_account.line')
     >>> Invoice = Model.get('account.invoice')
     >>> InvoiceLine = Model.get('account.invoice.line')
-    >>> supplier_invoice = Invoice(type='in_invoice')
+    >>> supplier_invoice = Invoice(type='in')
     >>> supplier_invoice.party = supplier
     >>> invoice_line = supplier_invoice.lines.new()
     >>> invoice_line.product = asset_product
@@ -236,7 +236,7 @@ Create Moves for 3 other months::
 
 Sale the asset::
 
-    >>> customer_invoice = Invoice(type='out_invoice')
+    >>> customer_invoice = Invoice(type='out')
     >>> customer_invoice.party = customer
     >>> invoice_line = customer_invoice.lines.new()
     >>> invoice_line.product = asset_product
