@@ -30,7 +30,7 @@ class Asset(AnalyticMixin):
         AnalyticLine = pool.get('analytic_account.line')
         return AnalyticLine(name=self.rec_name, debit=line.debit,
             credit=line.credit, journal=self.account_journal, active=True,
-            date=move.date, reference=self.reference)
+            date=move.date)
 
     def get_analytic_lines(self, move, line):
         lines = []
