@@ -1,15 +1,26 @@
-#The COPYRIGHT file at the top level of this repository contains the full
-#copyright notices and license terms.
+# The COPYRIGHT file at the top level of this repository contains the full
+# copyright notices and license terms.
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
+from trytond.pyson import Eval, If
+
 from trytond.modules.analytic_account import AnalyticMixin
 
 __all__ = ['Asset', 'UpdateAsset', 'AnalyticAccountEntry']
-__metaclass__ = PoolMeta
 
 
 class Asset(AnalyticMixin):
     __name__ = 'account.asset'
+
+    @classmethod
+    def __setup__(cls):
+        super(Asset, cls).__setup__()
+        cls.analytic_accounts.domain = [
+            ('company', '=', If(~Eval('company'),
+                    Eval('context', {}).get('company', -1),
+                    Eval('company', -1))),
+            ]
+        cls.analytic_accounts.depends.append('company')
 
     def get_move(self, line):
         move = super(Asset, self).get_move(line)
@@ -56,8 +67,8 @@ class Asset(AnalyticMixin):
 
 
 class UpdateAsset:
-    'Update Asset'
     __name__ = 'account.asset.update'
+    __metaclass__ = PoolMeta
 
     def get_move_lines(self, asset):
         lines = super(UpdateAsset, self).get_move_lines(asset)
@@ -71,8 +82,27 @@ class UpdateAsset:
 
 class AnalyticAccountEntry:
     __name__ = 'analytic.account.entry'
+    __metaclass__ = PoolMeta
 
     @classmethod
     def _get_origin(cls):
         origins = super(AnalyticAccountEntry, cls)._get_origin()
         return origins + ['account.asset']
+
+    @fields.depends('origin')
+    def on_change_with_company(self, name=None):
+        pool = Pool()
+        Asset = pool.get('account.asset')
+        company = super(AnalyticAccountEntry, self).on_change_with_company(
+            name)
+        if isinstance(self.origin, Asset):
+            company = self.origin.company.id
+        return company
+
+    @classmethod
+    def search_company(cls, name, clause):
+        domain = super(AnalyticAccountEntry, cls).search_company(name, clause),
+        return ['OR',
+            domain,
+            (('origin.company',) + tuple(clause[1:]) + ('account.asset',)),
+            ]
