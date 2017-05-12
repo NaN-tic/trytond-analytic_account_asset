@@ -6,7 +6,7 @@ from trytond.pyson import Eval, If
 
 from trytond.modules.analytic_account import AnalyticMixin
 
-__all__ = ['Asset', 'UpdateAsset', 'AnalyticAccountEntry']
+__all__ = ['Asset', 'UpdateAsset', 'AnalyticAccountEntry', 'Line']
 
 
 class Asset(AnalyticMixin):
@@ -106,3 +106,18 @@ class AnalyticAccountEntry:
             domain,
             (('origin.company',) + tuple(clause[1:]) + ('account.asset',)),
             ]
+
+
+class Line:
+    __name__ = 'analytic_account.line'
+    __metaclass__ = PoolMeta
+
+    @classmethod
+    def create(cls, vlist):
+        for value in vlist:
+            credit = value.get('credit')
+            debit = value.get('debit')
+            if credit < 0 or debit < 0:
+                value['debit'] = abs(credit)
+                value['credit'] = abs(debit)
+        return super(Line, cls).create(vlist)
