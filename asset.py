@@ -5,7 +5,7 @@ from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval
 from trytond.transaction import Transaction
 
-__all__ = ['Asset', 'UpdateAsset', 'Account']
+__all__ = ['Asset', 'UpdateAsset', 'Account', 'Line']
 __metaclass__ = PoolMeta
 
 
@@ -286,3 +286,17 @@ class Account:
         super(Account, cls).write(*args)
         # Restart the cache on the fields_view_get method of
         Asset._fields_view_get_cache.clear()
+
+
+class Line:
+    __name__ = 'analytic_account.line'
+
+    @classmethod
+    def create(cls, vlist):
+        for value in vlist:
+            credit = value.get('credit')
+            debit = value.get('debit')
+            if credit < 0 or debit < 0:
+                value['debit'] = abs(credit)
+                value['credit'] = abs(debit)
+        return super(Line, cls).create(vlist)
