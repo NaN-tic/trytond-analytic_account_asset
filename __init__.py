@@ -8,6 +8,7 @@ def register():
     Pool.register(
         Asset,
         AnalyticAccountEntry,
+        Line,
         module='analytic_account_asset', type_='model')
     Pool.register(
         UpdateAsset,
