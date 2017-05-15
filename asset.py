@@ -225,9 +225,13 @@ class Asset(AnalyticMixin):
 
     def get_analytic_lines(self, move, line):
         lines = []
-        if line.account == self.product.account_expense_used:
+        if (line.account == self.product.account_expense_used or
+                line.account == self.product.account_depreciation_used):
             if self.analytic_accounts:
                 for account in self.analytic_accounts.accounts:
+                    if (line.account.analytic_constraint(account)
+                            == 'forbidden'):
+                        continue
                     analytic_line = self.get_analytic_line_template(move, line)
                     analytic_line.account = account
                     lines.append(analytic_line)
