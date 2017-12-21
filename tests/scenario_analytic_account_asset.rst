@@ -2,16 +2,13 @@
 Analytic Account Asset Scenario
 ===============================
 
-=============
-General Setup
-=============
-
 Imports::
 
     >>> import datetime
     >>> from dateutil.relativedelta import relativedelta
     >>> from decimal import Decimal
     >>> from proteus import config, Model, Wizard
+    >>> from trytond.tests.tools import activate_modules
     >>> from trytond.modules.company.tests.tools import create_company, \
     ...     get_company
     >>> from trytond.modules.account.tests.tools import create_fiscalyear, \
@@ -22,19 +19,9 @@ Imports::
     ...     import add_asset_accounts
     >>> today = datetime.date.today()
 
-Create database::
+Install analytic_account_asset::
 
-    >>> config = config.set_trytond()
-    >>> config.pool.test = True
-
-Install account_asset::
-
-    >>> Module = Model.get('ir.module')
-    >>> module, = Module.find([
-    ...     ('name', '=', 'analytic_account_asset'),
-    ... ])
-    >>> module.click('install')
-    >>> Wizard('ir.module.install_upgrade').execute('upgrade')
+    >>> config = activate_modules('analytic_account_asset')
 
 Create company::
 
@@ -88,7 +75,7 @@ Create an asset::
     >>> asset_template.account_revenue = revenue
     >>> asset_template.account_asset = asset_account
     >>> asset_template.account_depreciation = depreciation_account
-    >>> asset_template.depreciation_duration = Decimal(24)
+    >>> asset_template.depreciation_duration = 24
     >>> asset_template.save()
     >>> asset_product.template = asset_template
     >>> asset_product.save()

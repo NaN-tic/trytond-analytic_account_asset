@@ -11,6 +11,7 @@ __all__ = ['Asset', 'UpdateAsset', 'AnalyticAccountEntry', 'Line']
 
 class Asset(AnalyticMixin):
     __name__ = 'account.asset'
+    __metaclass__ = PoolMeta
 
     @classmethod
     def __setup__(cls):
