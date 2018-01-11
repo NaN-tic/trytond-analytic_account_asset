@@ -109,6 +109,6 @@ setup(name='%s_%s' % (PREFIX, MODULE),
     tests_require=tests_require,
     use_2to3=True,
     convert_2to3_doctests=[
-        'tests/scenario_invoice_posted2draft.rst',
+        'tests/scenario_analytic_account_asset.rst',
         ],
     )
