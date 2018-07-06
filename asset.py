@@ -97,7 +97,7 @@ class AnalyticAccountEntry:
         company = super(AnalyticAccountEntry, self).on_change_with_company(
             name)
         if isinstance(self.origin, Asset):
-            company = self.origin.company.id
+            company = self.origin.company and self.origin.company.id
         return company
 
     @classmethod
