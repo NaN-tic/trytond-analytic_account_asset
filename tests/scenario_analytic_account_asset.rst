@@ -117,7 +117,7 @@ Buy an asset::
     >>> supplier_invoice.invoice_date = today + relativedelta(day=1, month=1)
     >>> supplier_invoice.click('post')
     >>> supplier_invoice.state
-    u'posted'
+    'posted'
     >>> invoice_line, = supplier_invoice.lines
     >>> (asset_account.debit, asset_account.credit) == \
     ...     (Decimal('1000'), Decimal('0'))
@@ -242,7 +242,7 @@ Sale the asset::
     True
     >>> customer_invoice.click('post')
     >>> customer_invoice.state
-    u'posted'
+    'posted'
     >>> asset.reload()
     >>> revenue.debit
     Decimal('860.72')

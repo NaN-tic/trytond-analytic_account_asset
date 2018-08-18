@@ -9,9 +9,8 @@ from trytond.modules.analytic_account import AnalyticMixin
 __all__ = ['Asset', 'UpdateAsset', 'AnalyticAccountEntry', 'Line']
 
 
-class Asset(AnalyticMixin):
+class Asset(AnalyticMixin, metaclass=PoolMeta):
     __name__ = 'account.asset'
-    __metaclass__ = PoolMeta
 
     @classmethod
     def __setup__(cls):
@@ -67,9 +66,8 @@ class Asset(AnalyticMixin):
         return move
 
 
-class UpdateAsset:
+class UpdateAsset(metaclass=PoolMeta):
     __name__ = 'account.asset.update'
-    __metaclass__ = PoolMeta
 
     def get_move_lines(self, asset):
         lines = super(UpdateAsset, self).get_move_lines(asset)
@@ -81,9 +79,8 @@ class UpdateAsset:
         return lines
 
 
-class AnalyticAccountEntry:
+class AnalyticAccountEntry(metaclass=PoolMeta):
     __name__ = 'analytic.account.entry'
-    __metaclass__ = PoolMeta
 
     @classmethod
     def _get_origin(cls):
@@ -109,9 +106,8 @@ class AnalyticAccountEntry:
             ]
 
 
-class Line:
+class Line(metaclass=PoolMeta):
     __name__ = 'analytic_account.line'
-    __metaclass__ = PoolMeta
 
     @classmethod
     def create(cls, vlist):
