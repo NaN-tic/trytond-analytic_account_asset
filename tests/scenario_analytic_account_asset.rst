@@ -57,6 +57,17 @@ Create analytic accounts::
     ...     name='Deprecation')
     >>> deprecation_analytic_account.save()
 
+Create account category::
+
+    >>> ProductCategory = Model.get('product.category')
+    >>> account_category = ProductCategory(name="Account Category")
+    >>> account_category.accounting = True
+    >>> account_category.account_expense = expense
+    >>> account_category.account_revenue = revenue
+    >>> account_category.account_asset = asset_account
+    >>> account_category.account_depreciation = depreciation_account
+    >>> account_category.save()
+
 Create an asset::
 
     >>> ProductUom = Model.get('product.uom')
@@ -71,10 +82,7 @@ Create an asset::
     >>> asset_template.list_price = Decimal('1000')
     >>> asset_template.cost_price = Decimal('1000')
     >>> asset_template.depreciable = True
-    >>> asset_template.account_expense = expense
-    >>> asset_template.account_revenue = revenue
-    >>> asset_template.account_asset = asset_account
-    >>> asset_template.account_depreciation = depreciation_account
+    >>> asset_template.account_category = account_category
     >>> asset_template.depreciation_duration = 24
     >>> asset_template.save()
     >>> asset_product.template = asset_template
