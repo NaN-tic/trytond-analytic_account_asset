@@ -27,6 +27,13 @@ class Asset(AnalyticMixin):
         move = super(Asset, self).get_move(line)
         return self.set_analytic_lines(move)
 
+    def get_closing_move(self, account):
+        """
+        Returns closing move values.
+        """
+        move = super(Asset, self).get_closing_move(account)
+        return self.set_analytic_lines(move)
+
     def set_analytic_lines(self, move):
         """
         Sets analytics lines for an asset move
@@ -46,25 +53,15 @@ class Asset(AnalyticMixin):
 
     def get_analytic_lines(self, move, line):
         lines = []
-        if line.account == self.product.account_expense_used:
-            for entry in self.analytic_accounts:
-                if not entry.account:
+        if self.analytic_accounts:
+            for account in self.analytic_accounts.accounts:
+                if (line.account.analytic_constraint(account)
+                        == 'forbidden'):
                     continue
                 analytic_line = self.get_analytic_line_template(move, line)
-                analytic_line.account = entry.account
+                analytic_line.account = account
                 lines.append(analytic_line)
         return lines
-
-    def get_closing_move(self, account):
-        """
-        Returns closing move values.
-        """
-        move = super(Asset, self).get_closing_move(account)
-        for line in move.lines:
-            analytic_lines = self.get_analytic_lines(move, line)
-            if analytic_lines:
-                line.analytic_lines = analytic_lines
-        return move
 
 
 class UpdateAsset:
@@ -97,7 +94,7 @@ class AnalyticAccountEntry:
         company = super(AnalyticAccountEntry, self).on_change_with_company(
             name)
         if isinstance(self.origin, Asset):
-            company = self.origin.company.id
+            company = self.origin.company and self.origin.company.id
         return company
 
     @classmethod
