@@ -53,12 +53,12 @@ class Asset(AnalyticMixin, metaclass=PoolMeta):
     def get_analytic_lines(self, move, line):
         lines = []
         if self.analytic_accounts:
-            for account in self.analytic_accounts.accounts:
-                if (line.account.analytic_constraint(account)
+            for entry in self.analytic_accounts:
+                if (line.account.analytic_constraint(entry.account)
                         == 'forbidden'):
                     continue
                 analytic_line = self.get_analytic_line_template(move, line)
-                analytic_line.account = account
+                analytic_line.account = entry.account
                 lines.append(analytic_line)
         return lines
 
