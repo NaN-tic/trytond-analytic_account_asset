@@ -9,7 +9,9 @@ from configparser import ConfigParser
 
 MODULE = 'analytic_account_asset'
 PREFIX = 'nantic'
-MODULE2PREFIX = {}
+MODULE2PREFIX = {
+    'analytic_line_state': 'nantic',
+}
 
 
 def read(fname):
