@@ -46,8 +46,7 @@ class Asset(AnalyticMixin, metaclass=PoolMeta):
     def get_analytic_line_template(self, move, line):
         pool = Pool()
         AnalyticLine = pool.get('analytic_account.line')
-        return AnalyticLine(name=self.rec_name, debit=line.debit,
-            credit=line.credit, journal=self.account_journal, active=True,
+        return AnalyticLine(debit=line.debit, credit=line.credit,
             date=move.date)
 
     def get_analytic_lines(self, move, line):
